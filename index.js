@@ -21,7 +21,7 @@ const num = getRandomIntInclusive(1, 10);
 app.get('/', async (req, res) => {
     return res.status(200).json({
         'Server id': num,
-        'novoItem': 'atualização do sistema'
+        'novoItem': 'atualização do sistema v2'
     });
 });
 
