@@ -20,7 +20,8 @@ const num = getRandomIntInclusive(1, 10);
 
 app.get('/', async (req, res) => {
     return res.status(200).json({
-        'Server id': num
+        'Server id': num,
+        'novoItem': 'teste'
     });
 });
 
