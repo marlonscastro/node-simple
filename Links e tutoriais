@@ -1,0 +1,92 @@
+Download do OC Client do Openshit 
+https://www.okd.io/download.html
+
+https://developers.redhat.com/blog/2018/10/04/modern-web-apps-openshift-part-1/
+
+npx nodeshift --strictSSL=false --dockerImage=nodeshift/ubi8-s2i-web-app --imageTag=10.x --build.env YARN_ENABLED=true --expose
+
+* Se o Client Openshift estiver no projeto padrao, o app sera incluido neste projeto;
+
+Deploy 
+oc scale start-build
+
+Scale
+oc scale --replicas=2 dc reactjs-teste
+
+PHP 7.2 no opewshift 
+
+oc new-app php:7.2~https://github.com/sclorg/s2i-php-container.git --context-dir=7.2/test/test-app/ --strategy=docker
+
+
+DELETAR APP COM TODOS OS SEUS RECURSOS
+oc delete all -l app=appName
+oc delete all -l app=s2i-php-container
+oc delete all -l app=mysql-replication-example
+
+PROCURAR CONTAINERS NO REPOSITORIO DA RED-HAT 
+https://catalog.redhat.com/software/containers/search
+
+
+INSTALAR PODMAN NO DEBIAN 10
+
+# Debian 10
+echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/Release.key | sudo apt-key add -
+
+sudo apt-get update -qq
+sudo apt-get -qq -y install podman
+
+#######################################################
+
+Escalar Mysql Replication
+oc scale rc mysql-slave-1 --replicas=<number>
+
+#######################################################
+
+Deletar todas as imagens do docker 
+docker image prune
+
+#############################################  Docker Image #######################################
+oc new-build <builder-image>~<git-repository> --name=<optional>
+oc new-build nodejs~https://github.com/cesarvr/hello-world-nodejs --name-nodejs-build
+
+############################################# Build atraves de Dockerfile ########################
+exemplo
+
+FROM mhart/alpine-node:base-8
+COPY * /run/
+EXPOSE 8080
+CMD ["node", "/run/app.js"]
+
+cat Dockerfile | oc new-build --name api --dockerfile='-' --context-dir=api --build-secret "bopmpe"
+oc start-build bc/api --follow
+
+
+############################################# php7.2 #############################################
+cat Dockerfile | oc new-build --name php-slim-72 --dockerfile='-'
+oc start-build bc/php-slim-72 --follow     # Funcionou
+
+############################################# Criar APP baseano em Dockerfile dentro de repositoio git ###########
+
+nodejs (Funciona)
+oc new-app . --strategy=docker --name node-docker
+
+########################### Criar APP baseano em Dockerfile dentro de repositoio git ################################
+
+php 7.2 (Funciona quando o repositório do git está local e o repositório nao é privado)
+oc new-app . --strategy=docker --name api
+
+php 7.2 SLIM - Fuciona com repositório remoto
+oc new-app https://www.git.pe.gov.br/gtiusa/BOPMPE.git --strategy=docker --name api --context-dir=api --source-secret "bopmpe"
+
+Deploy da api-infopol (Brendo)
+oc new-app https://www.git.pe.gov.br/gtiusa/BOPMPE.git --strategy=docker --name api-infopol --context-dir=api-infopol --source-secret "bopmpe"
+
+##########################################3## Redirecionamento de portas (para acessar mysql Openshift) ################
+oc get pods -o wide | grep Running 
+oc port-forward nome_do_pod 8000:3306                    porta_local:porta_do_pod
+oc get svc        #mostra detalhes dos servicos e ips Cluster
+
+###################### Patch para gerar endereço fixo externo 
+
+oc patch svc 'nome do serviço' -p '{"spec":{"externalIPs":["200.238.109.32"]}}'
